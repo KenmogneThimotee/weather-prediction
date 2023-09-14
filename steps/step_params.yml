@@ -1,0 +1,33 @@
+historical_features:
+  full_feature_names: False
+  entity_folder: data/city
+  trainer:
+    start:
+      year: 2012
+      month: 10
+      day: 01
+    end:
+      year: 2012
+      month: 10
+      day: 2
+  validator:
+    start:
+      year: 2012
+      month: 10
+      day: 3
+    end:
+      year: 2012
+      month: 10
+      day: 4
+  tester:
+    start:
+      year: 2012
+      month: 10
+      day: 5
+    end:
+      year: 2012
+      month: 10
+      day: 6
+city:
+  - Vancouver
+  - Montreal

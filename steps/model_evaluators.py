@@ -15,7 +15,7 @@
 
 from typing import List
 import pandas as pd
-from sklearn.base import ClassifierMixin
+from sklearn.base import RegressorMixin
 
 from zenml.integrations.deepchecks.steps import (
     DeepchecksModelValidationCheckStepParameters,
@@ -44,7 +44,7 @@ class ModelScorerStepParams(BaseParameters):
 
 def score_model(
     dataset: pd.DataFrame,
-    model: ClassifierMixin,
+    model: RegressorMixin,
 ) -> float:
     """Calculate the model accuracy on a given dataset.
 
@@ -67,7 +67,7 @@ def score_model(
 def model_scorer(
     params: ModelScorerStepParams,
     dataset: pd.DataFrame,
-    model: ClassifierMixin,
+    model: RegressorMixin,
 ) -> float:
     """Calculate and log the model accuracy on a given dataset.
 
@@ -87,6 +87,9 @@ def model_scorer(
     print(f"{params.accuracy_metric_name}: {acc}")
     return acc
 
+@step
+def deployment_decision(score: float) -> bool:
+    return True
 
 @step(
     experiment_tracker=get_tracker_name(),
@@ -94,7 +97,7 @@ def model_scorer(
 def optional_model_scorer(
     params: ModelScorerStepParams,
     dataset: pd.DataFrame,
-    model: List[ClassifierMixin],
+    model: List[RegressorMixin],
 ) -> float:
     """Calculate and log the model accuracy on a given dataset with an optional
     model.

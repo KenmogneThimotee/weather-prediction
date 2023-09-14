@@ -15,11 +15,11 @@
 """Model training steps used to train a model on the training data."""
 
 import pandas as pd
-from sklearn.base import ClassifierMixin
-from sklearn.svm import SVC
+from sklearn.base import  RegressorMixin
+from sklearn.svm import SVR
 from zenml.client import Client
 from zenml.steps import BaseParameters, Output, step
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from steps.data_loaders import DATASET_TARGET_COLUMN_NAME
 from utils.tracker_helper import enable_autolog, get_tracker_name
@@ -47,7 +47,6 @@ class SVCTrainerParams(BaseParameters):
     degree: int = 3
     coef0: float = 0.0
     shrinking: bool = True
-    probability: bool = False
     extra_hyperparams: dict = {}
 
 
@@ -57,7 +56,7 @@ class SVCTrainerParams(BaseParameters):
 def svc_trainer(
     params: SVCTrainerParams,
     train_dataset: pd.DataFrame,
-) -> Output(model=ClassifierMixin, accuracy=float):
+) -> Output(model=RegressorMixin, accuracy=float):
     """Train and logs a sklearn C-support vector classification model.
     
     If the experiment tracker is enabled, the model and the training accuracy
@@ -74,13 +73,12 @@ def svc_trainer(
 
     X = train_dataset.drop(columns=[DATASET_TARGET_COLUMN_NAME])
     y = train_dataset[DATASET_TARGET_COLUMN_NAME]
-    model = SVC(
+    model = SVR(
         C=params.C,
         kernel=params.kernel,
         degree=params.degree,
         coef0=params.coef0,
         shrinking=params.shrinking,
-        probability=params.probability,
         random_state=params.random_state,
         **params.extra_hyperparams,
     )
@@ -114,7 +112,7 @@ class DecisionTreeTrainerParams(BaseParameters):
 def decision_tree_trainer(
     params: DecisionTreeTrainerParams,
     train_dataset: pd.DataFrame,
-) -> Output(model=ClassifierMixin, accuracy=float):
+) -> Output(model=RegressorMixin, accuracy=float):
     """Train a sklearn decision tree classifier.
 
     If the experiment tracker is enabled, the model and the training accuracy
@@ -131,7 +129,7 @@ def decision_tree_trainer(
 
     X = train_dataset.drop(columns=[DATASET_TARGET_COLUMN_NAME])
     y = train_dataset[DATASET_TARGET_COLUMN_NAME]
-    model = DecisionTreeClassifier(
+    model = DecisionTreeRegressor(
         max_depth=5,
         random_state=params.random_state,
         **params.extra_hyperparams,

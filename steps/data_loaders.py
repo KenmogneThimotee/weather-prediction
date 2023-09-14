@@ -23,7 +23,7 @@ from zenml.steps import BaseParameters, Output, step
 import requests
 
 
-DATASET_TARGET_COLUMN_NAME = "target"
+DATASET_TARGET_COLUMN_NAME = "temperature"
 
 
 def download_dataframe(

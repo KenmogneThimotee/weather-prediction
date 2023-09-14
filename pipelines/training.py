@@ -13,43 +13,28 @@
 #  permissions and limitations under the License.
 
 from zenml.pipelines import pipeline
-
+import yaml
 
 @pipeline
 def gitflow_training_pipeline(
-    importer,
-    data_splitter,
-    data_integrity_checker,
-    train_test_data_drift_detector,
+    get_historical_data,
+    get_validation_data,
     model_trainer,
     model_scorer,
-    model_evaluator,
-    train_test_model_evaluator,
-    model_appraiser,
+    model_register,
+    model_deployer,
+    deployment_decision
 ):
     """Pipeline that trains and evaluates a new model."""
-    data = importer()
-    data_integrity_report = data_integrity_checker(dataset=data)
-    train_dataset, test_dataset = data_splitter(data)
-    train_test_data_drift_report = train_test_data_drift_detector(
-        reference_dataset=train_dataset, target_dataset=test_dataset
+    data = get_historical_data()
+    model, train_accuracy = model_trainer(train_dataset=data)
+    validation_data = get_validation_data()
+    test_accuracy = model_scorer(dataset=validation_data, model=model)
+    
+    model_register(
+        model=model
     )
-    model, train_accuracy = model_trainer(train_dataset=train_dataset)
-    test_accuracy = model_scorer(dataset=test_dataset, model=model)
-    train_test_model_evaluation_report = train_test_model_evaluator(
-        model=model,
-        reference_dataset=train_dataset,
-        target_dataset=test_dataset,
-    )
-    model_evaluation_report = model_evaluator(
-        model=model,
-        dataset=test_dataset,
-    )
-    model_appraiser(
-        train_accuracy=train_accuracy,
-        test_accuracy=test_accuracy,
-        data_integrity_report=data_integrity_report,
-        train_test_data_drift_report=train_test_data_drift_report,
-        model_evaluation_report=model_evaluation_report,
-        train_test_model_evaluation_report=train_test_model_evaluation_report,
-    )
+    
+    model_deployer(model=model, deploy_decision=deployment_decision(test_accuracy))
+    
+    print("Accuracy: ", test_accuracy)
