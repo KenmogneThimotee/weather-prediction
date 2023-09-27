@@ -45,13 +45,9 @@ jobs:
 
       - name: Set stack
         run: |
-          zenml stack set aws_gitflow_stack
+          zenml stack set local_gitflow_stack
         
       - name: Run pipeline
         run: |
-          python run.py \
-            --pipeline end-to-end \
-            --requirements requirements-aws.txt \
-            --model iris-classifier \
-            --dataset production
+          python run.py 
 
