@@ -19,44 +19,31 @@ from sklearn.base import  RegressorMixin
 from sklearn.svm import SVR
 from zenml.client import Client
 from zenml.steps import BaseParameters, Output, step
+from zenml import step
+
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from steps.data_loaders import DATASET_TARGET_COLUMN_NAME
 from utils.tracker_helper import enable_autolog, get_tracker_name
-
-
-class SVCTrainerParams(BaseParameters):
-    """Parameters for the SVC trainer step with various hyperparameters.
-
-    Attributes:
-        random_state: The random state used for reproducibility. Pass an int for
-            reproducible and cached output across multiple step runs.
-        C: Penalty parameter C of the error term.
-        kernel: Specifies the kernel type to be used in the algorithm.
-        degree: Degree of the polynomial kernel function.
-        coef0: Independent term in kernel function.
-        shrinking: Whether to use the shrinking heuristic.
-        probability: Whether to enable probability estimates.
-        extra_hyperparams: Extra hyperparameters to pass to the model
-            initializer.
-    """
-
-    random_state: int = 42
-    C: float = 1.320498
-    kernel: str = "rbf"
-    degree: int = 3
-    coef0: float = 0.0
-    shrinking: bool = True
-    extra_hyperparams: dict = {}
+from mlflow.models import infer_signature
+import mlflow
+from zenml.integrations.mlflow.mlflow_utils import get_tracking_uri
+from zenml.integrations.mlflow.experiment_trackers import mlflow_experiment_tracker
 
 
 @step(
     experiment_tracker=get_tracker_name(),
 )
 def svc_trainer(
-    params: SVCTrainerParams,
     train_dataset: pd.DataFrame,
-) -> Output(model=RegressorMixin, accuracy=float):
+    random_state: int = 42,
+    C: float = 1.320498,
+    kernel: str = "rbf",
+    degree: int = 3,
+    coef0: float = 0.0,
+    shrinking: bool = True,
+    extra_hyperparams: dict = {},
+):
     """Train and logs a sklearn C-support vector classification model.
     
     If the experiment tracker is enabled, the model and the training accuracy
@@ -74,45 +61,33 @@ def svc_trainer(
     X = train_dataset.drop(columns=[DATASET_TARGET_COLUMN_NAME])
     y = train_dataset[DATASET_TARGET_COLUMN_NAME]
     model = SVR(
-        C=params.C,
-        kernel=params.kernel,
-        degree=params.degree,
-        coef0=params.coef0,
-        shrinking=params.shrinking,
-        random_state=params.random_state,
-        **params.extra_hyperparams,
+        C=C,
+        kernel=kernel,
+        degree=degree,
+        coef0=coef0,
+        shrinking=shrinking,
+        random_state=random_state,
+        **extra_hyperparams,
     )
 
     model.fit(X, y)
     train_acc = model.score(X, y)
+    
     print(f"Train accuracy: {train_acc}")
-    return model, train_acc
+    return model
 
-
-class DecisionTreeTrainerParams(BaseParameters):
-    """Parameters for the decision tree trainer step with various
-    hyperparameters.
-
-    Attributes:
-        random_state: The random state used for reproducibility. Pass an int for
-            reproducible and cached output across multiple step runs.
-        max_depth: The maximum depth of the tree.
-        extra_hyperparams: Extra hyperparameters to pass to the model
-            initializer.
-    """
-
-    random_state: int = 42
-    max_depth: int = 5
-    extra_hyperparams: dict = {}
 
 
 @step(
-    experiment_tracker=get_tracker_name(),
+    experiment_tracker=get_tracker_name()
 )
 def decision_tree_trainer(
-    params: DecisionTreeTrainerParams,
     train_dataset: pd.DataFrame,
-) -> Output(model=RegressorMixin, accuracy=float):
+    model_city: str,
+    random_state: int = 42,
+    max_depth: int = 5,
+    extra_hyperparams: dict = {},
+):
     """Train a sklearn decision tree classifier.
 
     If the experiment tracker is enabled, the model and the training accuracy
@@ -125,17 +100,23 @@ def decision_tree_trainer(
     Returns:
         The trained model and the training accuracy.
     """
-    enable_autolog()
+    
+    mlflow.set_tracking_uri(get_tracking_uri())
+    mlflow.autolog()
 
     X = train_dataset.drop(columns=[DATASET_TARGET_COLUMN_NAME])
     y = train_dataset[DATASET_TARGET_COLUMN_NAME]
     model = DecisionTreeRegressor(
-        max_depth=5,
-        random_state=params.random_state,
-        **params.extra_hyperparams,
+        max_depth=max_depth,
+        random_state=random_state,
+        **extra_hyperparams,
     )
 
     model.fit(X, y)
     train_acc = model.score(X, y)
     print(f"Train accuracy: {train_acc}")
-    return model, train_acc
+    signature = infer_signature(X, model.predict(X))
+
+    # log model
+    mlflow.sklearn.log_model(model, f"{model_city}-model", signature=signature)
+    return model

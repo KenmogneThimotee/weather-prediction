@@ -32,6 +32,7 @@ def get_tracker_name() -> Optional[str]:
     """Get the name of the active experiment tracker."""
 
     experiment_tracker = Client().active_stack.experiment_tracker
+    print("Experiment tracker : ", experiment_tracker)
     return experiment_tracker.name if experiment_tracker else None
 
 
@@ -81,7 +82,7 @@ def get_current_tracker_run_url() -> Optional[str]:
 
         from zenml.integrations.mlflow.mlflow_utils import get_tracking_uri
         import mlflow
-
+        print("Tracking URI : ", get_tracking_uri(), mlflow.active_run())
         # remote tracking
         if experiment_tracker.config.tracking_uri:
 

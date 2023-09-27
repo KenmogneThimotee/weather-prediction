@@ -29,5 +29,8 @@ historical_features:
       month: 10
       day: 6
 city:
-  - Vancouver
   - Montreal
+  - Toronto
+  - Houston
+  - Vancouver
+
