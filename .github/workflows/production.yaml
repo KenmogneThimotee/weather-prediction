@@ -17,17 +17,6 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          role-to-assume: arn:aws:iam::715803424590:role/OrganizationAccountRestrictedAccessRole
-          aws-region: eu-central-1
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        run: |
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 715803424590.dkr.ecr.us-east-1.amazonaws.com
-
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
