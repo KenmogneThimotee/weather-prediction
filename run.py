@@ -1,18 +1,3 @@
-#  Copyright (c) ZenML GmbH 2023. All Rights Reserved.
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at:
-#
-#       https://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
-#  or implied. See the License for the specific language governing
-#  permissions and limitations under the License.
-
-
 from zenml.client import Client
 from zenml.config import DockerSettings
 
@@ -24,7 +9,6 @@ from pipelines import (
 from zenml.enums import ExecutionStatus
 from zenml.integrations.mlflow.mlflow_utils import get_tracking_uri
 from zenml.integrations.deepchecks import DeepchecksIntegration
-from utils.kubeflow_helper import get_kubeflow_settings
 from utils.tracker_helper import LOCAL_MLFLOW_UI_PORT, get_tracker_name
 import yaml
 from yaml import Loader
