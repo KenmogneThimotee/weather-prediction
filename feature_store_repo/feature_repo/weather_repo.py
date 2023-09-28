@@ -12,10 +12,13 @@ from feast import (
     FileSource,
     PushSource,
     RequestSource,
+    
 )
 from feast.on_demand_feature_view import on_demand_feature_view
 from feast.types import Float32, Float64, Int64, String
-
+from feast import FeatureStore
+import os 
+store = FeatureStore()
 # Define an entity for the driver. You can think of an entity as a primary key used to
 # fetch features.
 city = Entity(name="city", join_keys=["City"])
@@ -23,9 +26,11 @@ city = Entity(name="city", join_keys=["City"])
 # Read data from parquet files. Parquet is convenient for local development mode. For
 # production, you can use your favorite DWH, such as BigQuery. See Feast documentation
 # for more info.
+data_path = os.path.join(os.getcwd(), "data/weather_data.pq")
+print("Data path : ", data_path)
 weather_data_source = FileSource(
     name="weather_data",
-    path="/home/thimotee/work/weather-prediction/feature_store_repo/feature_repo/data/weather_data.pq",
+    path=data_path,
     timestamp_field="datetime"
 )
 
@@ -58,41 +63,6 @@ weather_data_fv = FeatureView(
     tags={"team": "weather_data"},
 )
 
-# # Define a request data source which encodes features / information only
-# # available at request time (e.g. part of the user initiated HTTP request)
-# input_request = RequestSource(
-#     name="vals_to_add",
-#     schema=[
-#         Field(name="val_to_add", dtype=Int64),
-#         Field(name="val_to_add_2", dtype=Int64),
-#     ],
-# )
-
-
-# # Define an on demand feature view which can generate new features based on
-# # existing feature views and RequestSource features
-# @on_demand_feature_view(
-#     sources=[driver_stats_fv, input_request],
-#     schema=[
-#         Field(name="conv_rate_plus_val1", dtype=Float64),
-#         Field(name="conv_rate_plus_val2", dtype=Float64),
-#     ],
-# )
-# def transformed_conv_rate(inputs: pd.DataFrame) -> pd.DataFrame:
-#     df = pd.DataFrame()
-#     df["conv_rate_plus_val1"] = inputs["conv_rate"] + inputs["val_to_add"]
-#     df["conv_rate_plus_val2"] = inputs["conv_rate"] + inputs["val_to_add_2"]
-#     return df
-
-
-# # This groups features into a model version
-# driver_activity_v1 = FeatureService(
-#     name="driver_activity_v1",
-#     features=[
-#         driver_stats_fv[["conv_rate"]],  # Sub-selects a feature from a feature view
-#         transformed_conv_rate,  # Selects all features from the feature view
-#     ],
-# )
 city_weather_data = FeatureService(
     name="city_weather_data", features=[weather_data_fv]
 )
@@ -106,7 +76,7 @@ weather_data_push_source = PushSource(
 # Defines a slightly modified version of the feature view from above, where the source
 # has been changed to the push source. This allows fresh features to be directly pushed
 # to the online store for this feature view.
-driver_stats_fresh_fv = FeatureView(
+weather_fresh_fv = FeatureView(
     name="driver_hourly_stats_fresh",
     entities=[city],
     ttl=timedelta(days=1),
@@ -124,25 +94,3 @@ driver_stats_fresh_fv = FeatureView(
     source=weather_data_push_source,  # Changed from above
     tags={"team": "driver_performance"},
 )
-
-
-# # Define an on demand feature view which can generate new features based on
-# # existing feature views and RequestSource features
-# @on_demand_feature_view(
-#     sources=[driver_stats_fresh_fv, input_request],  # relies on fresh version of FV
-#     schema=[
-#         Field(name="conv_rate_plus_val1", dtype=Float64),
-#         Field(name="conv_rate_plus_val2", dtype=Float64),
-#     ],
-# )
-# def transformed_conv_rate_fresh(inputs: pd.DataFrame) -> pd.DataFrame:
-#     df = pd.DataFrame()
-#     df["conv_rate_plus_val1"] = inputs["conv_rate"] + inputs["val_to_add"]
-#     df["conv_rate_plus_val2"] = inputs["conv_rate"] + inputs["val_to_add_2"]
-#     return df
-
-
-# driver_activity_v3 = FeatureService(
-#     name="driver_activity_v3",
-#     features=[driver_stats_fresh_fv, transformed_conv_rate_fresh],
-# )
