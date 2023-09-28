@@ -39,6 +39,9 @@ jobs:
       - name: Install wkhtmltopdf
         run: sudo apt-get install wkhtmltopdf
 
+      - name: Run feast apply
+        run: cd feature_store_repo/feature_repo && feast apply
+
       - name: Connect to ZenML server
         run: |
           zenml connect --no-verify-ssl --url $ZENML_HOST --username $ZENML_USERNAME --password $ZENML_PASSWORD
